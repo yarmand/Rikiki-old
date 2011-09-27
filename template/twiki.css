@@ -1,0 +1,78 @@
+html
+{
+  background: white;
+  background-image: -webkit-linear-gradient(top , rgb(98,109,103) 45%, rgb(255,255,255) 92%);
+  background-position: top;
+  background-repeat: repeat-x;
+}
+body
+{
+  background: white;
+  margin:1em auto 0 auto;
+  padding:1em;
+  font-family: arial, sans-serif;
+  border-radius: 15px;
+  max-width:1200px;
+}
+
+header
+{
+  background-color:rgb(224,170,99);
+  padding:1em;
+  margin:-1em -1em 1em -1em;
+  border-radius: 15px 15px 0 0;
+  height: 30px;
+}
+
+h1
+{
+/*  background-image: url("images/h1_bg.png"); */
+  background-image: -webkit-linear-gradient(left , rgb(224,170,99) 45%, rgb(255,255,255) 92%);
+  border-radius: 5px;
+  padding-left: 0.5em;
+  background-repeat:repeat-y;
+  text-decoration:underline;
+}
+
+h2
+{
+  margin-left:1em;
+  color: #8C2121;
+  background-image: -webkit-linear-gradient(left , lightgrey 45%, rgb(255,255,255) 92%);
+  border-radius: 5px;
+  padding-left: 0.5em;
+}
+
+thead
+{
+  background-color: lightgrey;
+  font-weight:bold;
+}
+table
+{
+  border:solid thin black;
+}
+
+blockquote
+{
+  display:inline-block;
+  border-left: solid thin black;
+  padding-left: 0.5em;
+  padding-right: 0.5em;
+  background-color: rgb(240,240,255);
+}
+
+#toc
+{
+  background-color: lightgrey;
+  float:right;
+  border: solid thin black;
+  border-radius: 5px;
+  padding:1em;
+}
+
+#toc ul
+{
+  list-style: none;
+  padding:0;
+}

@@ -1,0 +1,5 @@
+html
+pages_state.yml
+*.tmproj
+pages
+.pid
