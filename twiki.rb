@@ -5,11 +5,13 @@ require 'eventmachine'
 require 'redcarpet'
 require 'fileutils'
 
+
 module Twiki
 
   class Watcher
 
     @pid=false
+    @instance=false
     
 
     /*
@@ -18,30 +20,26 @@ module Twiki
     */
     def initialize(p)
       @folder = p[:folder]
-      @conf_folder = "#{@folder}/.twiki"
-      @pid_file = "#{@conf_folder}/.pid"
+      @conf_folder=File.expand_path('~/.twiki')
+      @pid_file = @conf_folder+"/.pid"
+      @directories_file = @conf_folder+"/watched_folders.list"
       Dir.mkdir(@conf_folder) unless Dir.exists?(@conf_folder)
     end
     
-  end    
-end
-
-
-  pid_file='.pid'
-
-  if File.exists?(pid_file)
-    pid=File.read(pid_file).to_i
-    begin
-      Process.kill(0, pid)
-      puts "Another instance of twiki already running"
-      exit
-    rescue Errno::ESRCH
-    end
-  end
-
-  puts "Creating a new process"
-  File.open(pid_file,"w+") {|f| f.puts $$}
-
+    def launch_deamon
+      if File.exists?(pid_file)
+        pid=File.read(pid_file).to_i
+        begin
+          Process.kill(0, pid)
+          raise :ALREADY_RUNNING, "Another instance of twiki already running"
+          exit
+        rescue Errno::ESRCH
+        end
+      end
+      puts "Creating a new process"
+      File.open(pid_file,"w+") {|f| f.puts $$}
+    end    
+  end  
   def process_file(src,dest)
     puts "processing #{src} => #{dest}"
     dir=File.dirname(dest)
@@ -59,8 +57,8 @@ end
     end
   end
 
-  def build_index
-    File.open("./pages/index.md","w+") do |index_file|
+  def build_index(filename)
+    File.open(filename,"w+") do |index_file|
       index_file.puts("<H1>wiki index</H1>\n")
       `cd html;find .`.split("\n").each do |f|
         next if f =~ /DS_Store/
@@ -75,38 +73,46 @@ end
     end
   end
 
-  dw = DirectoryWatcher.new '.', :pre_load => true, :scanner => :em
-  dw.glob = 'pages/**/*'
-  dw.interval = 2.0
-  dw.stable = 2
-  dw.persist = "pages_state.yml"
-  dw.add_observer do |*args|
-    args.each do |event|
-      puts event
-      fpath=event.path
-      src=File.expand_path(fpath)
-      dest = File.expand_path(fpath.sub(/^\.\/pages/,'html').sub(/\..*$/,'')+'.html')
-      case event.type
-      when :modified
-        process_file(src,dest)
-      when :added
-        process_file(src,dest)
-        next if fpath === "./pages/index.md"
-        build_index
-      when :removed
-        puts "deleting #{dest}"
-        File.delete(dest)
-        build_index
+  def watch(dir)
+    dw = DirectoryWatcher.new dir, :pre_load => true, :scanner => :em
+    dw.glob = 'pages/**/*'
+    dw.interval = 2.0
+    dw.stable = 2
+    dw.persist = "pages_state.yml"
+    dw.add_observer do |*args|
+      args.each do |event|
+        puts event
+        fpath=event.path
+        src=File.expand_path(fpath)
+        dest = File.expand_path(fpath.sub(/^\.\/pages/,'html').sub(/\..*$/,'')+'.html')
+        case event.type
+        when :modified
+          process_file(src,dest)
+        when :added
+          process_file(src,dest)
+          next if fpath === "./pages/index.md"
+          build_index
+        when :removed
+          puts "deleting #{dest}"
+          File.delete(dest)
+          build_index("./pages/index.md")
+        end
+        puts ' '
       end
-      puts ' '
+    end
+
+    Thread.new do
+      loop do
+        dw.load!
+        dw.run_once
+        dw.persist!
+        sleep dw.interval
+      end
     end
   end
 
-  loop do
-    dw.load!
-    dw.run_once
-    dw.persist!
-    sleep dw.interval
-  end
+end
+
+
 
 end
