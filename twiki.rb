@@ -1,6 +1,6 @@
 #!/usr/bin/env ruby
 
-require 'directory_watcher'
+require "directory_watcher"
 require 'eventmachine'
 #require 'github/markup'
 require 'redcarpet'
@@ -29,11 +29,14 @@ def process_file(src,dest)
   File.open(dest,  "w+") do |f|
     f.write File.read("./template/header.html").sub(/<!--BASE-->/,"<base href='#{dest}'/>").sub(/--CSS--/,File.expand_path("template/twiki.css")).sub(/--INDEX--/,File.expand_path("html/index.html"))
 #    f.write GitHub::Markup.render(src)
-    markdown = RedcarpetCompat.new(File.read(src))
+    md_text = File.read(src)
+    md_options = {no_intra_emphasis: true, tables: true, fenced_code_blocks: true, autolink: true, strikethrough: true, lax_html_blocks: true, space_after_headers: true, superscript: true, with_toc_data: true}
+    markdown = Redcarpet::Markdown.new(Redcarpet::Render::HTML_TOC, md_options)
     f.puts "<div id='toc'>"
-    f.write markdown.toc_content
+    f.write markdown.render(md_text)
     f.puts "</div>"
-    f.write markdown.to_html
+    markdown = Redcarpet::Markdown.new(Redcarpet::Render::HTML, md_options)
+    f.write markdown.render(md_text)
     f.write File.read("./template/footer.html")
   end
 end
